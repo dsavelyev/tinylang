@@ -86,26 +86,26 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
 
     @Override
     public Object visitCompoundStmt(GrammarParser.CompoundStmtContext ctx) {
-        return new CompoundStmtNode(((StmtList)visit(ctx.stmtBlock())).list());
+        return visit(ctx.stmtBlock());
     }
 
     @Override
     public Object visitStmtBlock(GrammarParser.StmtBlockContext ctx) {
         var stmts = new ArrayList<StmtNode>();
         for (var group : ctx.stmtGroup()) {
-            var newStmts = ((StmtList)visit(group)).list();
+            var newStmts = ((CompoundStmtNode)visit(group)).stmts();
             stmts.addAll(newStmts);
         }
-        return new StmtList(stmts);
+        return new CompoundStmtNode(stmts);
     }
 
-    private StmtList visitStmts(List<GrammarParser.StatementContext> statement) {
+    private CompoundStmtNode visitStmts(List<GrammarParser.StatementContext> statement) {
         var stmts = new ArrayList<StmtNode>();
         for (var stmt : statement) {
             var node = visit(stmt);
             stmts.add((StmtNode)node);
         }
-        return new StmtList(stmts);
+        return new CompoundStmtNode(stmts);
     }
 
     @Override
@@ -118,7 +118,7 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
     @Override
     public Object visitWhileStmt(GrammarParser.WhileStmtContext ctx) {
         return new WhileNode((ExprNode)visit(ctx.expr()),
-                new CompoundStmtNode(((StmtList)visit(ctx.stmtGroup())).list()));
+                (CompoundStmtNode)visit(ctx.stmtGroup()));
     }
 
     @Override
@@ -146,9 +146,9 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
         var scope = new HashSet<String>();
         stack.add(scope);
 
-        var stmts = ((StmtList)visit(ctx.stmtBlock())).list();
+        var stmts = (CompoundStmtNode)visit(ctx.stmtBlock());
 
         stack.removeLast();
-        return new ProgramNode(scope, new CompoundStmtNode(stmts));
+        return new ProgramNode(scope, stmts);
     }
 }
