@@ -5,7 +5,7 @@ import org.example.interp.Value;
 import java.util.ArrayList;
 
 public record FuncCallNode(
-        String name,
+        ExprNode func,
         ArrayList<ExprNode> args
 ) implements ExprNode {
     @Override

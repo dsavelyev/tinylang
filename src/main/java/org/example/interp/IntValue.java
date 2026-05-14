@@ -1,8 +1,18 @@
 package org.example.interp;
 
-public record IntValue(int value) implements Value {
+import java.util.Objects;
+
+public final class IntValue extends Value {
+    private final int value;
+
+    public IntValue(int value) {
+        this.value = value;
+    }
+
     @Override
-    public String toString() { return String.valueOf(value); }
+    public String toString() {
+        return String.valueOf(value);
+    }
 
     public int toIntOrThrow() {
         return value;
@@ -10,5 +20,9 @@ public record IntValue(int value) implements Value {
 
     public boolean toBoolOrThrow() {
         return value != 0;
+    }
+
+    public int value() {
+        return value;
     }
 }

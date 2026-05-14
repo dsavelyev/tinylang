@@ -38,7 +38,7 @@ public class Main {
             var visitor = new ASTVisitor();
             ast = (ProgramNode) visitor.visit(parseTree);
 
-            //System.out.println("Parsed:\n" + ast.toString());
+//            System.out.println("Parsed:\n" + ast.toString());
         } catch (ParseCancellationException e) {
             System.err.println("Compilation failed: " + e.getMessage());
             return;

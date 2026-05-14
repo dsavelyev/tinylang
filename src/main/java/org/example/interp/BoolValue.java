@@ -1,14 +1,28 @@
 package org.example.interp;
 
-public record BoolValue(boolean value) implements Value {
+import java.util.Objects;
+
+public final class BoolValue extends Value {
+    private final boolean value;
+
+    public BoolValue(boolean value) {
+        this.value = value;
+    }
+
     @Override
-    public String toString() { return String.valueOf(value); }
+    public String toString() {
+        return String.valueOf(value);
+    }
 
     public int toIntOrThrow() {
         return value ? 1 : 0;
     }
 
     public boolean toBoolOrThrow() {
+        return value;
+    }
+
+    public boolean value() {
         return value;
     }
 }

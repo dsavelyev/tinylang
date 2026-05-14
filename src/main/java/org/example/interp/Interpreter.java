@@ -65,7 +65,7 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
         }
     }
 
-    private void visitBody(ArrayList<StmtNode> nodes) {
+    private void visitStmts(ArrayList<StmtNode> nodes) {
         for (var node : nodes) {
             node.visit(this);
         }
@@ -74,7 +74,7 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
     @Override
     public void visitWhile(WhileNode node) {
         while (node.cond().visit(this).toBoolOrThrow()) {
-            visitBody(node.body());
+            visitStmts(node.body().stmts());
         }
     }
 
@@ -115,21 +115,27 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
 
     @Override
     public Value visitFuncCall(FuncCallNode node) {
-        var func = ((FunctionValue)getVariable(node.name())).body();
+        FuncDeclNode func;
+        try {
+            func = ((FunctionValue) node.func().visit(this)).body();
+        } catch(ClassCastException e) {
+            throw new InterpreterError("attempted call of non-function");
+        }
 
-        var args = node.args().stream().map((argnode) -> argnode.visit(this))
-                .iterator();
+        var args = node.args().iterator();
         var params = func.params().iterator();
-
         var scope = newScope(func.locals());
-        while (params.hasNext()) {
-            setVariable(params.next(), args.next(), scope);
+        while (params.hasNext() && args.hasNext()) {
+            setVariable(params.next(), args.next().visit(this), scope);
+        }
+        if (params.hasNext() || args.hasNext()) {
+            throw new InterpreterError("argument count mismatch");
         }
         stack.add(scope);
 
         Value ret = new IntValue(0);
         try {
-            visitBody(func.body());
+            visitStmts(func.body().stmts());
         } catch (Return r) {
             ret = r.value;
         }
@@ -143,12 +149,17 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
         var scope = newScope(node.locals());
         stack.add(scope);
 
-        visitBody(node.body());
+        visitStmts(node.body().stmts());
     }
 
     @Override
     public void visitFuncDecl(FuncDeclNode node) {
         setVariable(node.name(), new FunctionValue(node));
+    }
+
+    @Override
+    public void visitCompoundStmt(CompoundStmtNode node) {
+        visitStmts(node.stmts());
     }
 
     public HashMap<String, Value> getAllVariables() {

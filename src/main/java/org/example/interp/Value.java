@@ -1,11 +1,11 @@
 package org.example.interp;
 
-public interface Value {
-    default boolean toBoolOrThrow() {
+public abstract class Value {
+    public boolean toBoolOrThrow() {
         throw new InterpreterError("type mismatch, expected boolean");
     }
 
-    default int toIntOrThrow() {
+    public int toIntOrThrow() {
         throw new InterpreterError("type mismatch, expected int");
     }
 }

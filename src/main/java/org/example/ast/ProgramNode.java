@@ -5,7 +5,7 @@ import java.util.HashSet;
 
 public record ProgramNode(
         HashSet<String> locals,
-        ArrayList<StmtNode> body
+        CompoundStmtNode body
 ) implements StmtNode {
     @Override
     public void visit(StmtVisitor visitor) {

@@ -24,7 +24,7 @@ stmtGroup : (statement (',' statement)*)?;
 paramlist: (IDENT (',' IDENT)*)?;
 exprlist: (expr (',' expr)*)?;
 
-expr: IDENT '(' exprlist ')'                         # CallExpr
+expr: expr '(' exprlist ')'                         # CallExpr
     | expr op=('*'|'/') expr                      # MulExpr
     | expr op=('+'|'-') expr                      # AddExpr
     | expr op=('=='|'!='|'<'|'>'|'<='|'>=') expr  # CmpExpr

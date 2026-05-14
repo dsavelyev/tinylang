@@ -6,5 +6,6 @@ public interface StmtVisitor {
     void visitIf(IfNode node);
     void visitWhile(WhileNode node);
     void visitFuncDecl(FuncDeclNode node);
+    void visitCompoundStmt(CompoundStmtNode node);
     void visitProgram(ProgramNode node);
 }
