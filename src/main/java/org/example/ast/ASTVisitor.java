@@ -20,37 +20,37 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
 
     @Override
     public Object visitAndExpr(GrammarParser.AndExprContext ctx) {
-        return new LogicalOpNode(LogicalOp.AND, (ExprNode) visit(ctx.expr(0)), (ExprNode) visit(ctx.expr(1)));
+        return new LogicalOpNode(LogicalOpNode.Type.AND, (ExprNode) visit(ctx.expr(0)), (ExprNode) visit(ctx.expr(1)));
     }
 
     @Override
     public Object visitOrExpr(GrammarParser.OrExprContext ctx) {
-        return new LogicalOpNode(LogicalOp.OR, (ExprNode) visit(ctx.expr(0)), (ExprNode) visit(ctx.expr(1)));
+        return new LogicalOpNode(LogicalOpNode.Type.OR, (ExprNode) visit(ctx.expr(0)), (ExprNode) visit(ctx.expr(1)));
     }
 
     @Override
     public Object visitUnaryExpr(GrammarParser.UnaryExprContext ctx) {
-        return new UnaryOpNode(UnaryOp.fromString(ctx.op.getText()), (ExprNode) visit(ctx.expr()));
+        return new UnaryOpNode(UnaryOpNode.Type.fromString(ctx.op.getText()), (ExprNode) visit(ctx.expr()));
     }
 
     @Override
     public Object visitAddExpr(GrammarParser.AddExprContext ctx) {
         return new BinOpNode((ExprNode) visit(ctx.expr(0)),
-                BinOp.fromString(ctx.op.getText()),
+                BinOpNode.Type.fromString(ctx.op.getText()),
                 (ExprNode) visit(ctx.expr(1)));
     }
 
     @Override
     public Object visitMulExpr(GrammarParser.MulExprContext ctx) {
         return new BinOpNode((ExprNode) visit(ctx.expr(0)),
-                BinOp.fromString(ctx.op.getText()),
+                BinOpNode.Type.fromString(ctx.op.getText()),
                 (ExprNode) visit(ctx.expr(1)));
     }
 
     @Override
     public Object visitCmpExpr(GrammarParser.CmpExprContext ctx) {
         return new BinOpNode((ExprNode) visit(ctx.expr(0)),
-                BinOp.fromString(ctx.op.getText()),
+                BinOpNode.Type.fromString(ctx.op.getText()),
                 (ExprNode) visit(ctx.expr(1)));
     }
 

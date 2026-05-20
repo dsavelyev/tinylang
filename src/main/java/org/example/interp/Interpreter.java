@@ -55,7 +55,7 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
     @Override
     public Value visitLogicalOp(LogicalOpNode node) {
         boolean left = node.lhs().visit(this).toBoolOrThrow();
-        return switch (node.op()) {
+        return switch (node.type()) {
             case AND -> new BoolValue(left && node.rhs().visit(this).toBoolOrThrow());
             case OR  -> new BoolValue(left || node.rhs().visit(this).toBoolOrThrow());
         };
@@ -63,7 +63,7 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
 
     @Override
     public Value visitUnaryOp(UnaryOpNode node) {
-        return switch (node.op()) {
+        return switch (node.type()) {
             case NEG -> new IntValue(-node.operand().visit(this).toIntOrThrow());
             case NOT -> new BoolValue(!node.operand().visit(this).toBoolOrThrow());
         };
@@ -75,7 +75,7 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
         int right = node.rhs().visit(this).toIntOrThrow();
 
         try {
-            return switch (node.binOp()) {
+            return switch (node.type()) {
                 case ADD -> new IntValue(left + right);
                 case SUB -> new IntValue(left - right);
                 case MUL -> new IntValue(left * right);
