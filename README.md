@@ -10,6 +10,8 @@ Project structure:
 
 Includes an IntelliJ run configuration. Can also be run with:
 ```
-mvn compile
-mvn exec:java
+./mvnw compile
+./mvnw exec:java
 ```
+
+See `test/java/org.example/InterpreterTest.java` for example programs.
