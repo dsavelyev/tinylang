@@ -41,12 +41,12 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
             var value = scope.get(name);
             if (value != null) {
                 if (value instanceof SentinelValue)
-                    throw new InterpreterError(String.format("unbound variable %s", name));
+                    throw new InterpreterError(InterpreterError.Kind.UNBOUND_VARIABLE, String.format("unbound variable %s", name));
                 return value;
             }
         }
 
-        throw new InterpreterError(String.format("undefined variable %s", name));
+        throw new InterpreterError(InterpreterError.Kind.UNBOUND_VARIABLE, String.format("undefined variable %s", name));
     }
 
     @Override
@@ -68,7 +68,7 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
                 case GE -> new BoolValue(left >= right);
             };
         } catch (ArithmeticException e) {
-            throw new InterpreterError(e.getMessage());
+            throw new InterpreterError(InterpreterError.Kind.DIVISION_BY_ZERO, e.getMessage());
         }
     }
 
@@ -126,7 +126,7 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
         try {
             func = ((FunctionValue) node.func().visit(this)).body();
         } catch(ClassCastException e) {
-            throw new InterpreterError("attempted call of non-function");
+            throw new InterpreterError(InterpreterError.Kind.TYPE_MISMATCH, "attempted call of non-function");
         }
 
         var args = node.args().iterator();
@@ -136,7 +136,7 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
             setVariable(params.next(), args.next().visit(this), scope);
         }
         if (params.hasNext() || args.hasNext()) {
-            throw new InterpreterError("argument count mismatch");
+            throw new InterpreterError(InterpreterError.Kind.ARGUMENT_COUNT_MISMATCH, "argument count mismatch");
         }
         stack.add(scope);
 
@@ -178,7 +178,7 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
         try {
             interp.visitProgram(program);
         } catch (StackOverflowError e) {
-            throw new InterpreterError("stack overflow");
+            throw new InterpreterError(InterpreterError.Kind.STACK_OVERFLOW, "stack overflow");
         }
         return interp;
     }

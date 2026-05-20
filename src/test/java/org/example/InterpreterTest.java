@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Map;
+import org.junit.jupiter.api.function.Executable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -341,63 +342,67 @@ class InterpreterTest {
 
     // --- error cases ---
 
+    private static InterpreterError.Kind errorKind(Executable program) {
+        return assertThrows(InterpreterError.class, program).kind();
+    }
+
     @Test
     void unboundVariableThrows() {
-        assertThrows(InterpreterError.class, () -> run("x = y"));
+        assertEquals(InterpreterError.Kind.UNBOUND_VARIABLE, errorKind(() -> run("x = y")));
     }
 
     @Test
     void divisionByZeroThrows() {
-        assertThrows(InterpreterError.class, () -> run("""
+        assertEquals(InterpreterError.Kind.DIVISION_BY_ZERO, errorKind(() -> run("""
                 x = 1
                 y = x / 0
-                """));
+                """)));
     }
 
     @Test
     void argumentCountMismatchThrows() {
-        assertThrows(InterpreterError.class, () -> run("""
+        assertEquals(InterpreterError.Kind.ARGUMENT_COUNT_MISMATCH, errorKind(() -> run("""
                 fun f(a, b) {
                 return a + b
                 }
                 r = f(1)
-                """));
+                """)));
     }
 
     @Test
     void callNonFunctionThrows() {
-        assertThrows(InterpreterError.class, () -> run("""
+        assertEquals(InterpreterError.Kind.TYPE_MISMATCH, errorKind(() -> run("""
                 x = 5
                 r = x(1)
-                """));
+                """)));
     }
 
     @Test
     void stackOverflow() {
-        assertThrows(InterpreterError.class, () -> run("""
+        assertEquals(InterpreterError.Kind.STACK_OVERFLOW, errorKind(() -> run("""
                 fun f() { return f() }
                 _ = f()
-                """));
+                """)));
     }
 
     @Test
     void functionUsedInArithmeticThrows() {
-        assertThrows(InterpreterError.class, () -> run("""
+        assertEquals(InterpreterError.Kind.TYPE_MISMATCH, errorKind(() -> run("""
                 fun f(n) {
                 return n
                 }
                 r = f + 1
-                """));
+                """)));
     }
 
     @Test
     void variableBoundLaterThrows() {
         // y appears later in the program so it gets a slot, but reading it before
         // its assignment is reached throws because the slot still holds SentinelValue
-        assertThrows(InterpreterError.class, () -> run("""
+        assertEquals(InterpreterError.Kind.UNBOUND_VARIABLE, errorKind(() -> run("""
                 x = y + 1
                 y = 5
-                """));
+                """)));
     }
 
     // --- Reader overload ---
