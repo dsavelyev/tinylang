@@ -380,6 +380,26 @@ class InterpreterTest {
                 """));
     }
 
+    @Test
+    void functionUsedInArithmeticThrows() {
+        assertThrows(InterpreterError.class, () -> run("""
+                fun f(n) {
+                return n
+                }
+                r = f + 1
+                """));
+    }
+
+    @Test
+    void variableBoundLaterThrows() {
+        // y appears later in the program so it gets a slot, but reading it before
+        // its assignment is reached throws because the slot still holds SentinelValue
+        assertThrows(InterpreterError.class, () -> run("""
+                x = y + 1
+                y = 5
+                """));
+    }
+
     // --- Reader overload ---
 
     @Test
