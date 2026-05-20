@@ -85,6 +85,103 @@ class InterpreterTest {
         assertFalse(boolVar(vars, "r"));
     }
 
+    // --- unary operators ---
+
+    @Test
+    void unaryNegateInteger() {
+        var vars = run("x = -5");
+        assertEquals(-5, intVar(vars, "x"));
+    }
+
+    @Test
+    void unaryNegateExpression() {
+        var vars = run("x = -(3 + 4)");
+        assertEquals(-7, intVar(vars, "x"));
+    }
+
+    @Test
+    void unaryNegateOnNonIntThrows() {
+        // - applied to a non-integer value should throw TYPE_MISMATCH
+        assertEquals(InterpreterError.Kind.TYPE_MISMATCH, errorKind(() -> run("""
+                fun f() { return 0 }
+                x = -f
+                """)));
+    }
+
+    @Test
+    void notTrue() {
+        var vars = run("x = !true");
+        assertFalse(boolVar(vars, "x"));
+    }
+
+    @Test
+    void notBoolExpression() {
+        var vars = run("""
+                a = 3
+                b = 5
+                x = !(a == b)
+                """);
+        assertTrue(boolVar(vars, "x"));
+    }
+
+    @Test
+    void notInteger() {
+        // any non-zero int is truthy, so !nonzero is false
+        var vars = run("x = !1");
+        assertFalse(boolVar(vars, "x"));
+    }
+
+    // --- logical connectives ---
+
+    @Test
+    void andFalseLeft() {
+        var vars = run("x = false && true");
+        assertFalse(boolVar(vars, "x"));
+    }
+
+    @Test
+    void orFalseLeft() {
+        var vars = run("x = false || true");
+        assertTrue(boolVar(vars, "x"));
+    }
+
+    @Test
+    void andConvertsIntOperands() {
+        // non-zero is truthy, zero is falsy
+        var vars = run("x = 1 && 1");
+        assertTrue(boolVar(vars, "x"));
+    }
+
+    @Test
+    void andShortCircuitsOnFalseLeft() {
+        // rhs divides by zero - must not be evaluated
+        var vars = run("""
+                x = false && 1 / 0 == 0
+                """);
+        assertFalse(boolVar(vars, "x"));
+    }
+
+    @Test
+    void orShortCircuitsOnTrueLeft() {
+        var vars = run("""
+                x = true || 1 / 0 == 0
+                """);
+        assertTrue(boolVar(vars, "x"));
+    }
+
+    @Test
+    void andDoesNotShortCircuitOnTrueLeft() {
+        // rhs is evaluated, so division by zero propagates
+        assertEquals(InterpreterError.Kind.DIVISION_BY_ZERO,
+                errorKind(() -> run("x = true && 1 / 0 == 0")));
+    }
+
+    @Test
+    void orDoesNotShortCircuitOnFalseLeft() {
+        assertEquals(InterpreterError.Kind.DIVISION_BY_ZERO,
+                errorKind(() -> run("x = false || 1 / 0 == 0")));
+    }
+
     // --- if / else ---
 
     @Test

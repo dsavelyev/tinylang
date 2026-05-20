@@ -25,9 +25,12 @@ paramlist: (IDENT (',' IDENT)*)?;
 exprlist: (expr (',' expr)*)?;
 
 expr: expr '(' exprlist ')'                         # CallExpr
+    | op=('-'|'!') expr                            # UnaryExpr
     | expr op=('*'|'/') expr                      # MulExpr
     | expr op=('+'|'-') expr                      # AddExpr
     | expr op=('=='|'!='|'<'|'>'|'<='|'>=') expr  # CmpExpr
+    | expr '&&' expr                              # AndExpr
+    | expr '||' expr                              # OrExpr
     | INT     #IntExpr
     | value=('true'|'false')  #BoolExpr
     | IDENT      #IdExpr
