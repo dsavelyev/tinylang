@@ -105,6 +105,7 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
 
     @Override
     public void visitReturn(ReturnNode node) {
+        // will be caught in the corresponding visitFuncCall
         throw new Return(node.expr().visit(this));
     }
 
