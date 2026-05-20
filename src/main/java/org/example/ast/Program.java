@@ -7,7 +7,7 @@ public record Program(
         CompoundStmtNode body
 ) implements StmtNode {
     @Override
-    public void visit(StmtVisitor visitor) {
+    public void visit(Visitor visitor) {
         visitor.visitProgram(this);
     }
 }

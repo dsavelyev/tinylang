@@ -8,7 +8,7 @@ public record BinOpNode(
         ExprNode rhs
 ) implements ExprNode {
     @Override
-    public Value visit(ExprVisitor visitor) {
+    public Value visit(Visitor visitor) {
         return visitor.visitBinOp(this);
     }
 

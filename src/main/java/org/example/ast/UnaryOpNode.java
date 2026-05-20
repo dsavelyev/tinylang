@@ -4,7 +4,7 @@ import org.example.interp.Value;
 
 public record UnaryOpNode(Type type, ExprNode operand) implements ExprNode {
     @Override
-    public Value visit(ExprVisitor visitor) {
+    public Value visit(Visitor visitor) {
         return visitor.visitUnaryOp(this);
     }
 

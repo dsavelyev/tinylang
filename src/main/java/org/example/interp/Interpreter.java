@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class Interpreter implements ExprVisitor, StmtVisitor {
+public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
     ArrayList<HashMap<String, Slot>> stack = new ArrayList<>();
 
     @Override

@@ -4,7 +4,7 @@ import org.example.interp.Value;
 
 public record LogicalOpNode(Type type, ExprNode lhs, ExprNode rhs) implements ExprNode {
     @Override
-    public Value visit(ExprVisitor visitor) {
+    public Value visit(Visitor visitor) {
         return visitor.visitLogicalOp(this);
     }
 

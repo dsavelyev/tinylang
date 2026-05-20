@@ -9,7 +9,7 @@ public record FuncCallNode(
         ArrayList<ExprNode> args
 ) implements ExprNode {
     @Override
-    public Value visit(ExprVisitor visitor) {
+    public Value visit(Visitor visitor) {
         return visitor.visitFuncCall(this);
     }
 }

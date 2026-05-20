@@ -10,7 +10,7 @@ public record FuncDeclNode(
         CompoundStmtNode body
 ) implements StmtNode {
     @Override
-    public void visit(StmtVisitor visitor) {
+    public void visit(Visitor visitor) {
         visitor.visitFuncDecl(this);
     }
 }
