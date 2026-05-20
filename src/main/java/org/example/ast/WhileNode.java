@@ -1,7 +1,5 @@
 package org.example.ast;
 
-import java.util.ArrayList;
-
 public record WhileNode(ExprNode cond, CompoundStmtNode body) implements StmtNode {
     @Override
     public void visit(StmtVisitor visitor) {

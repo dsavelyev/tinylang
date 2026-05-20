@@ -192,6 +192,137 @@ class InterpreterTest {
         assertEquals(3, intVar(vars, "found"));
     }
 
+    // --- compound statements and stmtGroups ---
+
+    @Test
+    void compoundStatementExecutesBody() {
+        var vars = run("""
+                x = 0
+                {
+                x = 99
+                }
+                """);
+        assertEquals(99, intVar(vars, "x"));
+    }
+
+    @Test
+    void compoundStatementSharesEnclosingScope() {
+        // assignments inside a curly block land in the surrounding scope, not a new one
+        var vars = run("""
+                x = 0
+                {
+                x = 7
+                }
+                y = x + 1
+                """);
+        assertEquals(7, intVar(vars, "x"));
+        assertEquals(8, intVar(vars, "y"));
+    }
+
+    @Test
+    void compoundStatementWithMultipleLines() {
+        var vars = run("""
+                x = 0
+                {
+                x = 1
+                x = x + 1
+                x = x * 3
+                }
+                """);
+        assertEquals(6, intVar(vars, "x"));
+    }
+
+    @Test
+    void compoundStatementAsThenBranch() {
+        var vars = run("""
+                x = 0
+                y = 0
+                if true then {
+                x = 1
+                y = 2
+                } else x = 99
+                """);
+        assertEquals(1, intVar(vars, "x"));
+        assertEquals(2, intVar(vars, "y"));
+    }
+
+    @Test
+    void compoundStatementAsElseBranch() {
+        var vars = run("""
+                x = 0
+                y = 0
+                if false then x = 99 else {
+                x = 3
+                y = 4
+                }
+                """);
+        assertEquals(3, intVar(vars, "x"));
+        assertEquals(4, intVar(vars, "y"));
+    }
+
+    @Test
+    void compoundStatementAsWhileBody() {
+        // curly block is a valid statement, so it can serve as the stmtGroup of a while
+        var vars = run("""
+                i = 0
+                x = 0
+                while i < 3 do {
+                i = i + 1
+                x = x + i
+                }
+                """);
+        // iteration 1: i=1, x=1; iteration 2: i=2, x=3; iteration 3: i=3, x=6
+        assertEquals(3, intVar(vars, "i"));
+        assertEquals(6, intVar(vars, "x"));
+    }
+
+    @Test
+    void stmtGroupExecutesLeftToRight() {
+        // within a comma group the left assignment is visible to the right side
+        var vars = run("x = 1, x = x + 10");
+        assertEquals(11, intVar(vars, "x"));
+    }
+
+    @Test
+    void stmtGroupWithThreeStatements() {
+        var vars = run("a = 1, b = 2, c = a + b");
+        assertEquals(1, intVar(vars, "a"));
+        assertEquals(2, intVar(vars, "b"));
+        assertEquals(3, intVar(vars, "c"));
+    }
+
+    @Test
+    void stmtGroupInsideCompoundStatement() {
+        // comma-separated group can appear as a line inside a curly block
+        var vars = run("""
+                x = 0
+                y = 0
+                {
+                x = 5, y = x * 2
+                }
+                """);
+        assertEquals(5, intVar(vars, "x"));
+        assertEquals(10, intVar(vars, "y"));
+    }
+
+    @Test
+    void commaTerminatesIfInsideWhileStmtGroup() {
+        // parses as: while ... do (if i==1 then x=x+1 else x=x+10), y=y+1, i=i+1
+        // the comma after the else-branch cuts off the if; y and i updates always run
+        var vars = run("""
+                i = 0
+                x = 0
+                y = 0
+                while i < 3 do if i == 1 then x = x + 1 else x = x + 10, y = y + 1, i = i + 1
+                """);
+        // i=0: else -> x=10,  y=1, i=1
+        // i=1: then -> x=11,  y=2, i=2
+        // i=2: else -> x=21,  y=3, i=3
+        assertEquals(21, intVar(vars, "x"));
+        assertEquals(3, intVar(vars, "y"));
+        assertEquals(3, intVar(vars, "i"));
+    }
+
     // --- functions ---
 
     @Test
