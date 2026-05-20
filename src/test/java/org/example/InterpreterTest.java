@@ -1,10 +1,5 @@
 package org.example;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.example.ast.ASTVisitor;
-import org.example.ast.ProgramNode;
-import org.example.ast.ThrowingErrorListener;
 import org.example.interp.BoolValue;
 import org.example.interp.Interpreter;
 import org.example.interp.InterpreterError;
@@ -12,6 +7,8 @@ import org.example.interp.IntValue;
 import org.example.interp.Value;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,17 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class InterpreterTest {
 
     private static Map<String, Value> run(String source) {
-        var input = CharStreams.fromString(source);
-        var lexer = new GrammarLexer(input);
-        var tokens = new CommonTokenStream(lexer);
-        var parser = new GrammarParser(tokens);
-        parser.removeErrorListeners();
-        parser.addErrorListener(ThrowingErrorListener.INSTANCE);
-
-        var ast = (ProgramNode) new ASTVisitor().visit(parser.program());
-        var interp = new Interpreter();
-        interp.visitProgram(ast);
-        return interp.getAllVariables();
+        return Interpreter.run(source).getAllVariables();
     }
 
     private static int intVar(Map<String, Value> vars, String name) {
@@ -383,5 +370,19 @@ class InterpreterTest {
                 x = 5
                 r = x(1)
                 """));
+    }
+
+    // --- Reader overload ---
+
+    @Test
+    void runFromReader() throws IOException {
+        var source = """
+                fun fact(n) {
+                if n <= 1 then return 1 else return n * fact(n - 1)
+                }
+                result = fact(6)
+                """;
+        var vars = Interpreter.run(new StringReader(source)).getAllVariables();
+        assertEquals(720, intVar(vars, "result"));
     }
 }

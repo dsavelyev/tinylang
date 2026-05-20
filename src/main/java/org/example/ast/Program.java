@@ -1,9 +1,8 @@
 package org.example.ast;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 
-public record ProgramNode(
+public record Program(
         HashSet<String> locals,
         CompoundStmtNode body
 ) implements StmtNode {

@@ -149,6 +149,6 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
         var stmts = (CompoundStmtNode)visit(ctx.stmtBlock());
 
         stack.removeLast();
-        return new ProgramNode(scope, stmts);
+        return new Program(scope, stmts);
     }
 }

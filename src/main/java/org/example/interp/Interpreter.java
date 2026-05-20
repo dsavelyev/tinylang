@@ -1,5 +1,12 @@
 package org.example.interp;
 
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+
+import java.io.IOException;
+import java.io.Reader;
+import org.example.GrammarLexer;
+import org.example.GrammarParser;
 import org.example.ast.*;
 
 import java.util.ArrayList;
@@ -145,7 +152,7 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
     }
 
     @Override
-    public void visitProgram(ProgramNode node) {
+    public void visitProgram(Program node) {
         var scope = newScope(node.locals());
         stack.add(scope);
 
@@ -164,5 +171,31 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
 
     public HashMap<String, Value> getAllVariables() {
         return stack.getLast();
+    }
+
+    public static Interpreter run(Program program) {
+        var interp = new Interpreter();
+        interp.visitProgram(program);
+        return interp;
+    }
+
+    public static Interpreter run(String source) {
+        var input = CharStreams.fromString(source);
+        return runFromCharStream(input);
+    }
+
+    public static Interpreter run(Reader reader) throws IOException {
+        var input = CharStreams.fromReader(reader);
+        return runFromCharStream(input);
+    }
+
+    private static Interpreter runFromCharStream(org.antlr.v4.runtime.CharStream input) {
+        var lexer = new GrammarLexer(input);
+        var tokens = new CommonTokenStream(lexer);
+        var parser = new GrammarParser(tokens);
+        parser.removeErrorListeners();
+        parser.addErrorListener(ThrowingErrorListener.INSTANCE);
+        var program = (Program) new ASTVisitor().visit(parser.program());
+        return run(program);
     }
 }
