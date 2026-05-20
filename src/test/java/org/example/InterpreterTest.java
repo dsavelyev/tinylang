@@ -372,6 +372,14 @@ class InterpreterTest {
                 """));
     }
 
+    @Test
+    void stackOverflow() {
+        assertThrows(InterpreterError.class, () -> run("""
+                fun f() { return f() }
+                _ = f()
+                """));
+    }
+
     // --- Reader overload ---
 
     @Test

@@ -175,7 +175,11 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
 
     public static Interpreter run(Program program) {
         var interp = new Interpreter();
-        interp.visitProgram(program);
+        try {
+            interp.visitProgram(program);
+        } catch (StackOverflowError e) {
+            throw new InterpreterError("stack overflow");
+        }
         return interp;
     }
 
