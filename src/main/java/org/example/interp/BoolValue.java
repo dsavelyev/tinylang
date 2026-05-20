@@ -1,7 +1,5 @@
 package org.example.interp;
 
-import java.util.Objects;
-
 public final class BoolValue extends Value {
     private final boolean value;
 

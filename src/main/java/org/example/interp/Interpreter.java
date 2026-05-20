@@ -12,9 +12,10 @@ import org.example.ast.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 public class Interpreter implements ExprVisitor, StmtVisitor {
-    ArrayList<HashMap<String, Value>> stack = new ArrayList<>();
+    ArrayList<HashMap<String, Slot>> stack = new ArrayList<>();
 
     @Override
     public void visitAssign(AssignmentNode node) {
@@ -25,24 +26,26 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
         setVariable(name, value, stack.getLast());
     }
 
-    private void setVariable(String name, Value value, HashMap<String, Value> scope) {
-        if (!scope.containsKey(name)) {
+    private void setVariable(String name, Value value, HashMap<String, Slot> scope) {
+        var slot = scope.get(name);
+        if (slot == null) {
             throw new AssertionError("no variable slot");
         }
-        scope.put(name, value);
+        slot.value = value;
     }
 
     private Value getVariable(String name) {
-        // SentinelValue = variable assigned in this scope but not yet bound
-        // null = variable never assigned in this scope
-        // so that as-yet-unassigned local variables don't shadow globals
+        // slot present with null value = declared in this scope but not yet assigned
+        // slot absent (map returns null) = not declared in this scope
+        // so that as-yet-unassigned local variables still shadow globals
 
         for (var scope : stack.reversed()) {
-            var value = scope.get(name);
-            if (value != null) {
-                if (value instanceof SentinelValue)
-                    throw new InterpreterError(InterpreterError.Kind.UNBOUND_VARIABLE, String.format("unbound variable %s", name));
-                return value;
+            var slot = scope.get(name);
+            if (slot != null) {
+                if (slot.value == null)
+                    throw new InterpreterError(InterpreterError.Kind.UNBOUND_VARIABLE,
+                            String.format("variable %s not yet assigned", name));
+                return slot.value;
             }
         }
 
@@ -110,12 +113,10 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
         return getVariable(node.name());
     }
 
-    private static HashMap<String, Value> newScope(HashSet<String> locals) {
-        var scope = new HashMap<String, Value>();
+    private static HashMap<String, Slot> newScope(HashSet<String> locals) {
+        var scope = new HashMap<String, Slot>();
         for (var name : locals) {
-            // create empty slots for all locals assigned in this scope
-            // (see getVariable)
-            scope.put(name, SentinelValue.INSTANCE);
+            scope.put(name, new Slot());
         }
         return scope;
     }
@@ -169,8 +170,14 @@ public class Interpreter implements ExprVisitor, StmtVisitor {
         visitStmts(node.stmts());
     }
 
-    public HashMap<String, Value> getAllVariables() {
-        return stack.getLast();
+    public Map<String, Value> getAllVariables() {
+        var result = new HashMap<String, Value>();
+        for (var entry : stack.getLast().entrySet()) {
+            if (entry.getValue().value != null) {
+                result.put(entry.getKey(), entry.getValue().value);
+            }
+        }
+        return result;
     }
 
     public static Interpreter run(Program program) {

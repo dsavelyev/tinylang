@@ -1,7 +1,5 @@
 package org.example.interp;
 
-import java.util.Objects;
-
 public final class IntValue extends Value {
     private final int value;
 

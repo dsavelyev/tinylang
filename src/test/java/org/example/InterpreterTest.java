@@ -529,7 +529,7 @@ class InterpreterTest {
     @Test
     void variableBoundLaterThrows() {
         // y appears later in the program so it gets a slot, but reading it before
-        // its assignment is reached throws because the slot still holds SentinelValue
+        // its assignment is reached throws because the slot's value is still null
         assertEquals(InterpreterError.Kind.UNBOUND_VARIABLE, errorKind(() -> run("""
                 x = y + 1
                 y = 5
