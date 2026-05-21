@@ -199,33 +199,31 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
         return result;
     }
 
-    public static Interpreter run(Program program) {
-        var interp = new Interpreter();
+    public void run(Program program) {
         try {
-            interp.visitProgram(program);
+            visitProgram(program);
         } catch (StackOverflowError e) {
             throw new InterpreterError(InterpreterError.Kind.STACK_OVERFLOW, "stack overflow");
         }
-        return interp;
     }
 
-    public static Interpreter run(String source) {
+    public void run(String source) {
         var input = CharStreams.fromString(source);
-        return runFromCharStream(input);
+        runFromCharStream(input);
     }
 
-    public static Interpreter run(Reader reader) throws IOException {
+    public void run(Reader reader) throws IOException {
         var input = CharStreams.fromReader(reader);
-        return runFromCharStream(input);
+        runFromCharStream(input);
     }
 
-    private static Interpreter runFromCharStream(org.antlr.v4.runtime.CharStream input) {
+    private void runFromCharStream(org.antlr.v4.runtime.CharStream input) {
         var lexer = new GrammarLexer(input);
         var tokens = new CommonTokenStream(lexer);
         var parser = new GrammarParser(tokens);
         parser.removeErrorListeners();
         parser.addErrorListener(ThrowingErrorListener.INSTANCE);
         var program = (Program) new ASTVisitor().visit(parser.program());
-        return run(program);
+        run(program);
     }
 }

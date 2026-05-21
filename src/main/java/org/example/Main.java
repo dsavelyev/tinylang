@@ -10,9 +10,9 @@ import java.io.InputStreamReader;
 
 public class Main {
     public static void main(String[] args) {
-        Interpreter interp;
+        var interp = new Interpreter();
         try {
-            interp = Interpreter.run(new InputStreamReader(System.in));
+            interp.run(new InputStreamReader(System.in));
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ParseCancellationException e) {

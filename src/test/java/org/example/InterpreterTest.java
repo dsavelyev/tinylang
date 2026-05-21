@@ -17,7 +17,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class InterpreterTest {
 
     private static Map<String, Value> run(String source) {
-        return Interpreter.run(source).getAllVariables();
+        var interp = new Interpreter();
+        interp.run(source);
+        return interp.getAllVariables();
     }
 
     private static int intVar(Map<String, Value> vars, String name) {
@@ -643,7 +645,9 @@ class InterpreterTest {
                 }
                 result = fact(6)
                 """;
-        var vars = Interpreter.run(new StringReader(source)).getAllVariables();
+        var interp = new Interpreter();
+        interp.run(new StringReader(source));
+        var vars = interp.getAllVariables();
         assertEquals(720, intVar(vars, "result"));
     }
 }
