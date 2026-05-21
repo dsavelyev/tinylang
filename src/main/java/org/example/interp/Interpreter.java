@@ -141,9 +141,10 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
 
     @Override
     public Value visitFuncCall(FuncCallNode node) {
+        var value = node.func().visit(this);
         FuncDeclNode func;
         try {
-            func = ((FunctionValue) node.func().visit(this)).body();
+            func = ((FunctionValue) value).body();
         } catch(ClassCastException e) {
             throw new InterpreterError(InterpreterError.Kind.TYPE_MISMATCH, "attempted call of non-function");
         }
