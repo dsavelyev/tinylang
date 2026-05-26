@@ -18,7 +18,7 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
     ArrayList<HashMap<String, Slot>> stack = new ArrayList<>();
 
     @Override
-    public void visitAssign(AssignmentNode node) {
+    public void visitAssign(StmtNode.Assignment node) {
         setVariable(node.name(), node.expr().visit(this));
     }
 
@@ -53,7 +53,7 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
     }
 
     @Override
-    public Value visitLogicalOp(LogicalOpNode node) {
+    public Value visitLogicalOp(ExprNode.LogicalOp node) {
         boolean left = node.lhs().visit(this).toBoolOrThrow();
         return switch (node.type()) {
             case AND -> new BoolValue(left && node.rhs().visit(this).toBoolOrThrow());
@@ -62,7 +62,7 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
     }
 
     @Override
-    public Value visitUnaryOp(UnaryOpNode node) {
+    public Value visitUnaryOp(ExprNode.UnaryOp node) {
         return switch (node.type()) {
             case NEG -> new IntValue(-node.operand().visit(this).toIntOrThrow());
             case NOT -> new BoolValue(!node.operand().visit(this).toBoolOrThrow());
@@ -70,7 +70,7 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
     }
 
     @Override
-    public Value visitBinOp(BinOpNode node) {
+    public Value visitBinOp(ExprNode.BinOp node) {
         int left = node.lhs().visit(this).toIntOrThrow();
         int right = node.rhs().visit(this).toIntOrThrow();
 
@@ -99,14 +99,14 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
     }
 
     @Override
-    public void visitWhile(WhileNode node) {
+    public void visitWhile(StmtNode.While node) {
         while (node.cond().visit(this).toBoolOrThrow()) {
             visitStmts(node.body().stmts());
         }
     }
 
     @Override
-    public void visitIf(IfNode node) {
+    public void visitIf(StmtNode.If node) {
         boolean cond = node.expr().visit(this).toBoolOrThrow();
         if (cond) {
             node.then().visit(this);
@@ -116,18 +116,18 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
     }
 
     @Override
-    public Value visitLiteral(LiteralNode node) {
+    public Value visitLiteral(ExprNode.Literal node) {
         return node.value();
     }
 
     @Override
-    public void visitReturn(ReturnNode node) {
+    public void visitReturn(StmtNode.Return node) {
         // will be caught in the corresponding visitFuncCall
         throw new Return(node.expr().visit(this));
     }
 
     @Override
-    public Value visitVar(VarNode node) {
+    public Value visitVarRef(ExprNode.VarRef node) {
         return getVariable(node.name());
     }
 
@@ -140,9 +140,9 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
     }
 
     @Override
-    public Value visitFuncCall(FuncCallNode node) {
+    public Value visitFuncCall(ExprNode.FuncCall node) {
         var value = node.func().visit(this);
-        FuncDeclNode func;
+        StmtNode.FuncDecl func;
         try {
             func = ((FunctionValue) value).body();
         } catch(ClassCastException e) {
@@ -172,7 +172,7 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
     }
 
     @Override
-    public void visitProgram(Program node) {
+    public void visitProgram(StmtNode.Program node) {
         var scope = newScope(node.locals());
         stack.add(scope);
 
@@ -180,12 +180,12 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
     }
 
     @Override
-    public void visitFuncDecl(FuncDeclNode node) {
+    public void visitFuncDecl(StmtNode.FuncDecl node) {
         setVariable(node.name(), new FunctionValue(node));
     }
 
     @Override
-    public void visitCompoundStmt(CompoundStmtNode node) {
+    public void visitCompoundStmt(StmtNode.CompoundStmt node) {
         visitStmts(node.stmts());
     }
 
@@ -199,7 +199,7 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
         return result;
     }
 
-    public void run(Program program) {
+    public void run(StmtNode.Program program) {
         try {
             visitProgram(program);
         } catch (StackOverflowError e) {
@@ -223,7 +223,7 @@ public class Interpreter implements ExprNode.Visitor, StmtNode.Visitor {
         var parser = new GrammarParser(tokens);
         parser.removeErrorListeners();
         parser.addErrorListener(ThrowingErrorListener.INSTANCE);
-        var program = (Program) new ASTVisitor().visit(parser.program());
+        var program = (StmtNode.Program) new ASTVisitor().visit(parser.program());
         run(program);
     }
 }

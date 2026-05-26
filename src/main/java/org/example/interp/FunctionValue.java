@@ -1,17 +1,15 @@
 package org.example.interp;
 
-import org.example.ast.FuncDeclNode;
-
-import java.util.Objects;
+import org.example.ast.StmtNode;
 
 public final class FunctionValue extends Value {
-    private final FuncDeclNode body;
+    private final StmtNode.FuncDecl body;
 
-    public FunctionValue(FuncDeclNode body) {
+    public FunctionValue(StmtNode.FuncDecl body) {
         this.body = body;
     }
 
-    public FuncDeclNode body() {
+    public StmtNode.FuncDecl body() {
         return body;
     }
 

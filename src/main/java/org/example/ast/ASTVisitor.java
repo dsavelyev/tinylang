@@ -15,42 +15,42 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
     @Override
     public Object visitAssignStmt(GrammarParser.AssignStmtContext ctx) {
         stack.getLast().add(ctx.IDENT().getText());
-        return new AssignmentNode(ctx.IDENT().getText(), (ExprNode) visit(ctx.expr()));
+        return new StmtNode.Assignment(ctx.IDENT().getText(), (ExprNode) visit(ctx.expr()));
     }
 
     @Override
     public Object visitAndExpr(GrammarParser.AndExprContext ctx) {
-        return new LogicalOpNode(LogicalOpNode.Type.AND, (ExprNode) visit(ctx.expr(0)), (ExprNode) visit(ctx.expr(1)));
+        return new ExprNode.LogicalOp(ExprNode.LogicalOp.Type.AND, (ExprNode) visit(ctx.expr(0)), (ExprNode) visit(ctx.expr(1)));
     }
 
     @Override
     public Object visitOrExpr(GrammarParser.OrExprContext ctx) {
-        return new LogicalOpNode(LogicalOpNode.Type.OR, (ExprNode) visit(ctx.expr(0)), (ExprNode) visit(ctx.expr(1)));
+        return new ExprNode.LogicalOp(ExprNode.LogicalOp.Type.OR, (ExprNode) visit(ctx.expr(0)), (ExprNode) visit(ctx.expr(1)));
     }
 
     @Override
     public Object visitUnaryExpr(GrammarParser.UnaryExprContext ctx) {
-        return new UnaryOpNode(UnaryOpNode.Type.fromString(ctx.op.getText()), (ExprNode) visit(ctx.expr()));
+        return new ExprNode.UnaryOp(ExprNode.UnaryOp.Type.fromString(ctx.op.getText()), (ExprNode) visit(ctx.expr()));
     }
 
     @Override
     public Object visitAddExpr(GrammarParser.AddExprContext ctx) {
-        return new BinOpNode((ExprNode) visit(ctx.expr(0)),
-                BinOpNode.Type.fromString(ctx.op.getText()),
+        return new ExprNode.BinOp((ExprNode) visit(ctx.expr(0)),
+                ExprNode.BinOp.Type.fromString(ctx.op.getText()),
                 (ExprNode) visit(ctx.expr(1)));
     }
 
     @Override
     public Object visitMulExpr(GrammarParser.MulExprContext ctx) {
-        return new BinOpNode((ExprNode) visit(ctx.expr(0)),
-                BinOpNode.Type.fromString(ctx.op.getText()),
+        return new ExprNode.BinOp((ExprNode) visit(ctx.expr(0)),
+                ExprNode.BinOp.Type.fromString(ctx.op.getText()),
                 (ExprNode) visit(ctx.expr(1)));
     }
 
     @Override
     public Object visitCmpExpr(GrammarParser.CmpExprContext ctx) {
-        return new BinOpNode((ExprNode) visit(ctx.expr(0)),
-                BinOpNode.Type.fromString(ctx.op.getText()),
+        return new ExprNode.BinOp((ExprNode) visit(ctx.expr(0)),
+                ExprNode.BinOp.Type.fromString(ctx.op.getText()),
                 (ExprNode) visit(ctx.expr(1)));
     }
 
@@ -60,12 +60,12 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
         var args = new ArrayList<ExprNode>();
         for (var arg : el.expr())
             args.add((ExprNode)visit(arg));
-        return new FuncCallNode((ExprNode)visit(ctx.expr()), args);
+        return new ExprNode.FuncCall((ExprNode)visit(ctx.expr()), args);
     }
 
     @Override
     public Object visitIntExpr(GrammarParser.IntExprContext ctx) {
-        return new LiteralNode(new IntValue(Integer.parseInt(ctx.INT().getText())));
+        return new ExprNode.Literal(new IntValue(Integer.parseInt(ctx.INT().getText())));
     }
 
     @Override
@@ -76,12 +76,12 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
             default -> throw new AssertionError("unexpected bool token");
         };
 
-        return new LiteralNode(new BoolValue(b));
+        return new ExprNode.Literal(new BoolValue(b));
     }
 
     @Override
     public Object visitIdExpr(GrammarParser.IdExprContext ctx) {
-        return new VarNode(ctx.getText());
+        return new ExprNode.VarRef(ctx.getText());
     }
 
     @Override
@@ -91,7 +91,7 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
 
     @Override
     public Object visitReturnStmt(GrammarParser.ReturnStmtContext ctx) {
-        return new ReturnNode((ExprNode)visit(ctx.expr()));
+        return new StmtNode.Return((ExprNode)visit(ctx.expr()));
     }
 
     @Override
@@ -108,32 +108,32 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
     public Object visitStmtBlock(GrammarParser.StmtBlockContext ctx) {
         var stmts = new ArrayList<StmtNode>();
         for (var group : ctx.stmtGroup()) {
-            var newStmts = ((CompoundStmtNode)visit(group)).stmts();
+            var newStmts = ((StmtNode.CompoundStmt)visit(group)).stmts();
             stmts.addAll(newStmts);
         }
-        return new CompoundStmtNode(stmts);
+        return new StmtNode.CompoundStmt(stmts);
     }
 
-    private CompoundStmtNode visitStmts(List<GrammarParser.StatementContext> statement) {
+    private StmtNode.CompoundStmt visitStmts(List<GrammarParser.StatementContext> statement) {
         var stmts = new ArrayList<StmtNode>();
         for (var stmt : statement) {
             var node = visit(stmt);
             stmts.add((StmtNode)node);
         }
-        return new CompoundStmtNode(stmts);
+        return new StmtNode.CompoundStmt(stmts);
     }
 
     @Override
     public Object visitIfStmt(GrammarParser.IfStmtContext ctx) {
-        return new IfNode((ExprNode)visit(ctx.expr()),
+        return new StmtNode.If((ExprNode)visit(ctx.expr()),
                 (StmtNode)visit(ctx.statement(0)),
                 (StmtNode)visit(ctx.statement(1)));
     }
 
     @Override
     public Object visitWhileStmt(GrammarParser.WhileStmtContext ctx) {
-        return new WhileNode((ExprNode)visit(ctx.expr()),
-                (CompoundStmtNode)visit(ctx.stmtGroup()));
+        return new StmtNode.While((ExprNode)visit(ctx.expr()),
+                (StmtNode.CompoundStmt)visit(ctx.stmtGroup()));
     }
 
     @Override
@@ -149,11 +149,11 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
 
         stack.add(scope);
 
-        var stmts = (CompoundStmtNode)visit(ctx.compoundStmt());
+        var stmts = (StmtNode.CompoundStmt)visit(ctx.compoundStmt());
 
         stack.removeLast();
 
-        return new FuncDeclNode(ctx.IDENT().getText(), params, scope, stmts);
+        return new StmtNode.FuncDecl(ctx.IDENT().getText(), params, scope, stmts);
     }
 
     @Override
@@ -161,9 +161,9 @@ public class ASTVisitor extends GrammarBaseVisitor<Object> {
         var scope = new HashSet<String>();
         stack.add(scope);
 
-        var stmts = (CompoundStmtNode)visit(ctx.stmtBlock());
+        var stmts = (StmtNode.CompoundStmt)visit(ctx.stmtBlock());
 
         stack.removeLast();
-        return new Program(scope, stmts);
+        return new StmtNode.Program(scope, stmts);
     }
 }
